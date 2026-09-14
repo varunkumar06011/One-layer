@@ -3,6 +3,16 @@ import { Link, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import logoImg from '../assets/logo/one-layer-logo.jpeg'
 
+function CartIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  )
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const { itemCount } = useCart()
@@ -43,7 +53,10 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <Link to="/cart" className="nav-cart" onClick={() => setOpen(false)}>
+        <Link to="/cart" className="nav-cart" onClick={() => setOpen(false)} aria-label="Cart">
+          <span className="nav-cart-icon">
+            <CartIcon />
+          </span>
           <span className="nav-cart-label">Cart</span>
           {itemCount > 0 && <span className="nav-cart-count">{itemCount}</span>}
         </Link>

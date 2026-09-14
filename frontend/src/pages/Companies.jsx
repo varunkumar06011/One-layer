@@ -2,6 +2,7 @@
 import { useProducts } from '../hooks/useProducts.js'
 import { createQuote, requestSampleKit } from '../api/client.js'
 import { customPricing as CUSTOM_PRICING } from '../data/products.js'
+import forCompany from '../assets/images/for-company.png'
 
 export default function Companies() {
   const { products } = useProducts()
@@ -80,12 +81,16 @@ export default function Companies() {
       {/* Hero */}
       <section className="section-sm companies-hero">
         <div className="container-narrow text-center">
-          <p className="eyebrow">For Companies</p>
           <h1>Uniforms that don't feel like uniforms.</h1>
           <p className="text-muted companies-hero-sub">
             Upload your logo once. Set your team's sizes. Reorder in 30 seconds.
             Calm, considered apparel for teams that care about the details.
           </p>
+        </div>
+        <div className="container">
+          <div className="companies-hero-image">
+            <img src={forCompany} alt="For Companies" />
+          </div>
         </div>
       </section>
 
@@ -210,7 +215,7 @@ export default function Companies() {
                     onChange={(e) => updateRow(i, 'qty', parseInt(e.target.value) || 1)}
                   />
                   <span>&#8377;{CUSTOM_PRICING[emp.size] * emp.qty}</span>
-                  <button className="row-remove" onClick={() => removeRow(i)} disabled={employees.length === 1}>&times;</button>
+                  <button className="row-remove" onClick={() => removeRow(i)} disabled={employees.length === 1}>x</button>
                 </div>
               ))}
               <button className="btn btn-outline btn-sm" onClick={addRow}>+ Add row</button>

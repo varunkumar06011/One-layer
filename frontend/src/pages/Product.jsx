@@ -1,8 +1,9 @@
 ﻿import { useState, useRef, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useProduct } from '../hooks/useProducts.js'
 import { useCart } from '../context/CartContext.jsx'
 import { customPricing } from '../data/products.js'
+import { getProductImage, hasPerColorImage } from '../data/productImages.js'
 
 export default function Product() {
   const { id } = useParams()
@@ -10,21 +11,27 @@ export default function Product() {
   const navigate = useNavigate()
   const { addItem } = useCart()
   const fileRef = useRef(null)
+  const [searchParams] = useSearchParams()
+  const preselectedColor = searchParams.get('color')
 
   const [size, setSize] = useState('M')
   const [color, setColor] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [customMode, setCustomMode] = useState(false)
   const [designFile, setDesignFile] = useState(null)
-  const [placement, setPlacement] = useState('chest')
+  const [placement, setPlacement] = useState('front')
   const [added, setAdded] = useState(false)
 
-  // Set default color once product loads
+  // Set default color once product loads.
+  // If a color was passed via ?color= query param, prefer that one.
   useEffect(() => {
     if (product && !color) {
-      setColor(product.colors[0])
+      const match = preselectedColor
+        ? product.colors.find((c) => c.name === preselectedColor)
+        : null
+      setColor(match || product.colors[0])
     }
-  }, [product, color])
+  }, [product, color, preselectedColor])
 
   if (loading) {
     return (
@@ -46,6 +53,8 @@ export default function Product() {
   const isCustom = customMode
   const price = isCustom ? customPricing[size] : product.pricing[size]
   const activeColor = color || product.colors[0]
+  const productImage = getProductImage(product.id, activeColor?.name)
+  const useTint = !hasPerColorImage(product.id, activeColor?.name)
 
   const handleFile = (e) => {
     const file = e.target.files?.[0]
@@ -76,22 +85,28 @@ export default function Product() {
             className="product-mockup"
             style={{ background: activeColor.hex }}
           >
-            <div className={`product-mockup-tee ${placement === 'back' ? 'back' : ''}`}>
-              {/* Tee shape */}
-              <div className="tee-body">
-                {product.fit === 'polo' && <div className="tee-collar"></div>}
-                {customMode && designFile && (
-                  <div className={`tee-print tee-print-${placement}`}>
-                    <img src={designFile.url} alt="Your design" />
-                  </div>
-                )}
-                {!customMode && (
-                  <div className="tee-label">
-                    <span>{product.name}</span>
-                  </div>
-                )}
+            {productImage && !customMode ? (
+              <>
+                <img src={productImage} alt={product.name} className="product-mockup-img" />
+                {useTint && <div className="product-mockup-tint" style={{ background: activeColor.hex }} />}
+              </>
+            ) : (
+              <div className={`product-mockup-tee ${placement === 'back' ? 'back' : ''}`}>
+                <div className="tee-body">
+                  {product.fit === 'polo' && <div className="tee-collar"></div>}
+                  {customMode && designFile && (
+                    <div className={`tee-print tee-print-${placement}`}>
+                      <img src={designFile.url} alt="Your design" />
+                    </div>
+                  )}
+                  {!customMode && (
+                    <div className="tee-label">
+                      <span>{product.name}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
             <div className="product-mockup-controls">
               <button
                 className={`mockup-side ${placement === 'front' ? 'active' : ''}`}
@@ -189,7 +204,7 @@ export default function Product() {
                   <div className="placement-row">
                     <label className="option-label">Placement</label>
                     <div className="placement-options">
-                      {['chest', 'back', 'sleeve'].map((pl) => (
+                      {['front', 'back', 'sleeve'].map((pl) => (
                         <button
                           key={pl}
                           className={`placement-btn ${placement === pl ? 'active' : ''}`}
@@ -209,7 +224,7 @@ export default function Product() {
           <div className="option-group">
             <label className="option-label">Quantity</label>
             <div className="qty-row">
-              <button className="qty-btn" onClick={() => setQuantity(Math.max(1, quantity - 1))}>&minus;</button>
+              <button className="qty-btn" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
               <span className="qty-value">{quantity}</span>
               <button className="qty-btn" onClick={() => setQuantity(quantity + 1)}>+</button>
             </div>

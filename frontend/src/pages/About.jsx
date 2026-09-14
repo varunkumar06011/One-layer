@@ -3,7 +3,6 @@
     <div className="about">
       <section className="section about-hero">
         <div className="container-narrow text-center">
-          <p className="eyebrow">About</p>
           <h1>One layer of fabric.<br />One layer of identity.</h1>
         </div>
       </section>

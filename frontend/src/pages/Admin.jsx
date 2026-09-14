@@ -203,7 +203,7 @@ export default function Admin() {
                     })}
                   </span>
                   <span>
-                    <button className="btn btn-ghost btn-sm">View &rarr;</button>
+                    <button className="btn btn-ghost btn-sm">View</button>
                   </span>
                 </div>
               ))}
@@ -223,7 +223,7 @@ export default function Admin() {
                   {new Date(selectedOrder.createdAt).toLocaleString('en-IN')}
                 </p>
               </div>
-              <button className="admin-modal-close" onClick={() => setSelectedOrder(null)}>&times;</button>
+              <button className="admin-modal-close" onClick={() => setSelectedOrder(null)}>x</button>
             </div>
 
             <div className="admin-modal-body">
@@ -270,7 +270,7 @@ export default function Admin() {
                       {item.customDesign && (
                         <div className="admin-design-link">
                           <a href={item.customDesign.url} target="_blank" rel="noopener noreferrer">
-                            View design: {item.customDesign.name} &rarr;
+                            View design: {item.customDesign.name}
                           </a>
                         </div>
                       )}

@@ -7,6 +7,7 @@ import {
   CUSTOM_SURCHARGE,
   FREE_SHIPPING_THRESHOLD,
 } from '../data/products.js'
+import { getProductImage } from '../data/productImages.js'
 
 export default function Cart() {
   const { items, removeItem, updateQty, subtotal, clearCart } = useCart()
@@ -164,7 +165,6 @@ export default function Cart() {
     <div className="cart-page">
       <section className="section-sm">
         <div className="container">
-          <p className="eyebrow">Cart</p>
           <h1>Your cart</h1>
         </div>
       </section>
@@ -183,14 +183,22 @@ export default function Cart() {
                 return (
                   <div key={item.key} className="cart-item">
                     <div className="cart-item-visual" style={{ background: item.color.hex }}>
-                      <div className="tee-body-sm">
-                        {item.product.fit === 'polo' && <div className="tee-collar"></div>}
-                        {item.customDesign && (
-                          <div className={`tee-print-sm tee-print-${item.placement}`}>
-                            <img src={item.customDesign.url} alt="Design" />
-                          </div>
-                        )}
-                      </div>
+                      {getProductImage(item.product.id, item.color?.name) ? (
+                        <img
+                          src={getProductImage(item.product.id, item.color?.name)}
+                          alt={item.product.name}
+                          className="cart-item-img"
+                        />
+                      ) : (
+                        <div className="tee-body-sm">
+                          {item.product.fit === 'polo' && <div className="tee-collar"></div>}
+                        </div>
+                      )}
+                      {item.customDesign && (
+                        <div className={`tee-print-sm tee-print-${item.placement}`}>
+                          <img src={item.customDesign.url} alt="Design" />
+                        </div>
+                      )}
                     </div>
                     <div className="cart-item-info">
                       <h3>{item.product.name}{item.customDesign && ' (Custom)'}</h3>
@@ -201,12 +209,12 @@ export default function Cart() {
                       <p className="cart-item-unit">&#8377;{basePrice}{item.customDesign ? ' + \u20B950 custom' : ''}</p>
                     </div>
                     <div className="cart-item-qty">
-                      <button className="qty-btn" onClick={() => updateQty(item.key, item.quantity - 1)}>&minus;</button>
+                      <button className="qty-btn" onClick={() => updateQty(item.key, item.quantity - 1)}>-</button>
                       <span className="qty-value">{item.quantity}</span>
                       <button className="qty-btn" onClick={() => updateQty(item.key, item.quantity + 1)}>+</button>
                     </div>
                     <div className="cart-item-total">&#8377;{lineTotal}</div>
-                    <button className="cart-item-remove" onClick={() => removeItem(item.key)}>&times;</button>
+                    <button className="cart-item-remove" onClick={() => removeItem(item.key)}>x</button>
                   </div>
                 )
               })}

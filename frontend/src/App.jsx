@@ -2,6 +2,7 @@
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
+import ConsentModal from './components/ConsentModal.jsx'
 import Home from './pages/Home.jsx'
 import Shop from './pages/Shop.jsx'
 import Product from './pages/Product.jsx'
@@ -14,6 +15,7 @@ import Admin from './pages/Admin.jsx'
 export default function App() {
   return (
     <>
+      <ConsentModal />
       <ScrollToTop />
       <Navbar />
       <main>

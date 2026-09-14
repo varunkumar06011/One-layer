@@ -3,7 +3,7 @@
    Calm, spacious, minimal, premium
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 @import url('./components.css');
 
 :root {
@@ -20,8 +20,8 @@
   --color-white: #ffffff;
 
   /* Typography */
-  --font-display: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Spacing */
   --space-xs: 0.5rem;
@@ -104,9 +104,10 @@ h4 { font-size: 1.25rem; }
 p { font-size: 1rem; line-height: 1.7; }
 
 .eyebrow {
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
@@ -138,10 +139,10 @@ p { font-size: 1rem; line-height: 1.7; }
   align-items: center;
   justify-content: center;
   padding: 0.875rem 2rem;
-  font-size: 0.8125rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   border-radius: var(--radius);
   transition: all var(--transition);
   cursor: pointer;
