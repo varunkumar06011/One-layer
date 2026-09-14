@@ -1,9 +1,10 @@
 ﻿// ONE LAYER — API client
-// Talks to the backend (Express on Railway)
+// In production (Vercel monorepo), API calls go through /api/* which Vercel routes to the backend.
+// In local dev, VITE_API_URL points to the local backend (http://localhost:5000).
 
 import { WHATSAPP_NUMBERS } from '../data/products.js'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 // Re-export so existing imports from the API client keep working
 export { WHATSAPP_NUMBERS }
