@@ -23,7 +23,6 @@ export default function Admin() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [updatingStatus, setUpdatingStatus] = useState(false)
 
-  // Check if already logged in
   useEffect(() => {
     adminVerify()
       .then((r) => setAuthed(!!r))
@@ -53,7 +52,6 @@ export default function Admin() {
     setSelectedOrder(null)
   }
 
-  // Fetch orders
   const fetchOrders = async () => {
     setLoadingOrders(true)
     try {
@@ -86,7 +84,6 @@ export default function Admin() {
     setUpdatingStatus(true)
     try {
       const updated = await updateOrderStatus(id, newStatus)
-      // Update in list
       setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)))
       if (selectedOrder?.id === id) {
         setSelectedOrder(updated)
@@ -162,10 +159,10 @@ export default function Admin() {
               <option value="">All statuses</option>
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
-            <button className="btn btn-outline btn-sm" onClick={fetchOrders}>Refresh</button>
+            <button className="btn btn-outline btn-sm admin-refresh-btn" onClick={fetchOrders}>Refresh</button>
           </div>
 
-          {/* Orders table */}
+          {/* Orders — desktop table */}
           {loadingOrders ? (
             <p className="text-muted">Loading orders...</p>
           ) : orders.length === 0 ? (
@@ -173,41 +170,71 @@ export default function Admin() {
               <p className="text-muted">No orders found.</p>
             </div>
           ) : (
-            <div className="admin-table">
-              <div className="admin-table-header">
-                <span>Order ID</span>
-                <span>Customer</span>
-                <span>Items</span>
-                <span>Total</span>
-                <span>Status</span>
-                <span>Date</span>
-                <span></span>
-              </div>
-              {orders.map((order) => (
-                <div key={order.id} className="admin-table-row" onClick={() => handleViewOrder(order.id)}>
-                  <span className="admin-order-id">{order.id}</span>
-                  <span>
-                    <div className="admin-customer-name">{order.customer?.name}</div>
-                    <div className="admin-customer-phone text-muted">{order.customer?.phone}</div>
-                  </span>
-                  <span>{order.itemCount} items</span>
-                  <span>&#8377;{order.total}</span>
-                  <span>
-                    <span className={`admin-status admin-status-${order.status.split(' ')[0].toLowerCase()}`}>
-                      {order.status}
-                    </span>
-                  </span>
-                  <span className="text-muted admin-date">
-                    {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                      day: 'numeric', month: 'short', year: 'numeric'
-                    })}
-                  </span>
-                  <span>
-                    <button className="btn btn-ghost btn-sm">View</button>
-                  </span>
+            <>
+              {/* Desktop table */}
+              <div className="admin-table">
+                <div className="admin-table-header">
+                  <span>Order ID</span>
+                  <span>Customer</span>
+                  <span>Items</span>
+                  <span>Total</span>
+                  <span>Status</span>
+                  <span>Date</span>
+                  <span></span>
                 </div>
-              ))}
-            </div>
+                {orders.map((order) => (
+                  <div key={order.id} className="admin-table-row" onClick={() => handleViewOrder(order.id)}>
+                    <span className="admin-order-id">{order.id}</span>
+                    <span>
+                      <div className="admin-customer-name">{order.customer?.name}</div>
+                      <div className="admin-customer-phone text-muted">{order.customer?.phone}</div>
+                    </span>
+                    <span>{order.itemCount} items</span>
+                    <span>&#8377;{order.total}</span>
+                    <span>
+                      <span className={`admin-status admin-status-${order.status.split(' ')[0].toLowerCase()}`}>
+                        {order.status}
+                      </span>
+                    </span>
+                    <span className="text-muted admin-date">
+                      {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                      })}
+                    </span>
+                    <span>
+                      <button className="btn btn-ghost btn-sm">View</button>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile cards */}
+              <div className="admin-cards">
+                {orders.map((order) => (
+                  <div key={order.id} className="admin-card" onClick={() => handleViewOrder(order.id)}>
+                    <div className="admin-card-top">
+                      <div>
+                        <span className="admin-order-id">{order.id}</span>
+                        <span className="admin-card-date text-muted">
+                          {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                      <span className={`admin-status admin-status-${order.status.split(' ')[0].toLowerCase()}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="admin-card-customer">
+                      <span className="admin-customer-name">{order.customer?.name}</span>
+                      <span className="admin-customer-phone text-muted">{order.customer?.phone}</span>
+                    </div>
+                    <div className="admin-card-bottom">
+                      <span className="admin-card-items">{order.itemCount} items</span>
+                      <span className="admin-card-total">&#8377;{order.total}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>
@@ -227,12 +254,15 @@ export default function Admin() {
             </div>
 
             <div className="admin-modal-body">
-              {/* Customer */}
+              {/* Customer + Address */}
               <div className="admin-section">
-                <h4>Customer</h4>
+                <h4>Customer Details</h4>
                 <div className="admin-detail-row"><span>Name</span><span>{selectedOrder.customer?.name}</span></div>
                 <div className="admin-detail-row"><span>Phone</span><span>{selectedOrder.customer?.phone}</span></div>
-                <div className="admin-detail-row"><span>Address</span><span>{selectedOrder.customer?.address}</span></div>
+                <div className="admin-detail-row admin-detail-address">
+                  <span>Address</span>
+                  <span>{selectedOrder.customer?.address}</span>
+                </div>
                 <div className="admin-detail-row"><span>Pincode</span><span>{selectedOrder.customer?.pincode}</span></div>
                 {selectedOrder.location && (
                   <div className="admin-detail-row">
