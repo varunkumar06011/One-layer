@@ -37,8 +37,8 @@ export default function Footer() {
             <h4>Contact</h4>
             <ul>
               <li><a href="mailto:hello@onelayer.in">hello@onelayer.in</a></li>
-              <li><a href="#">Instagram</a></li>
-              <li><a href="#">WhatsApp</a></li>
+              <li><a href="https://www.instagram.com/onelayer000?stkn=bTZqN3duaTg0Y3Vw" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+              <li><a href="https://wa.me/9391798370" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
             </ul>
           </div>
         </div>

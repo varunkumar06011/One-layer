@@ -374,7 +374,11 @@ export default function Account() {
                   <h2>Contact Us</h2>
                   <div className="info-card">
                     <h4>WhatsApp</h4>
-                    <p>9391798370 / 8317674764</p>
+                    <p><a href="https://wa.me/9391798370" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>9391798370</a> / <a href="https://wa.me/8317674764" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>8317674764</a></p>
+                  </div>
+                  <div className="info-card">
+                    <h4>Instagram</h4>
+                    <p><a href="https://www.instagram.com/onelayer000?stkn=bTZqN3duaTg0Y3Vw" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>@onelayer000</a></p>
                   </div>
                   <div className="info-card">
                     <h4>Email</h4>
