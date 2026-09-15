@@ -1440,7 +1440,19 @@
   background: var(--color-base);
 }
 .pincode-row input:focus { outline: none; border-color: var(--color-ink); }
-.zone-info { font-size: 0.8125rem; margin-top: 0.75rem; font-weight: 500; }
+.zone-info {
+  font-size: 0.8125rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-stone);
+  border-radius: var(--radius);
+}
+.zone-info-line { margin: 0.125rem 0; }
+.zone-error {
+  background: #fdf0ee;
+  color: #c44;
+  font-weight: 500;
+}
 .summary-rows { margin-bottom: 1.5rem; }
 .summary-row {
   display: flex;

@@ -34,7 +34,7 @@ export default function Cart() {
     // Reset shipping if pincode changes
     if (field === 'pincode') {
       setShippingInfo(null)
-      setShippingInfo(null)
+      setOrderError(null)
     }
   }
 
@@ -312,14 +312,34 @@ export default function Cart() {
                       onClick={handleCheckPincode}
                       disabled={checkingPincode || customer.pincode.length !== 6}
                     >
-                      {checkingPincode ? '...' : 'Check'}
+                      {checkingPincode ? 'Checking...' : 'Check'}
                     </button>
                   </div>
-                  {shippingInfo && (
-                    <p className="zone-info fade-in">
-                      Shipping to {customer.pincode}: &#8377;{shippingInfo.shippingCost}
-                      {shippingInfo.isFreeShipping && ' (Free)'}
+                  {orderError && customer.pincode && (
+                    <p className="zone-info zone-error fade-in">
+                      {orderError}
                     </p>
+                  )}
+                  {shippingInfo && (
+                    <div className="zone-info fade-in">
+                      <p className="zone-info-line">
+                        <strong>Shipping to {customer.pincode}</strong>
+                      </p>
+                      <p className="zone-info-line text-muted">
+                        {shippingInfo.location?.district}, {shippingInfo.location?.state} · {shippingInfo.zoneLabel}
+                      </p>
+                      <p className="zone-info-line">
+                        Shipping: {shippingInfo.isFreeShipping
+                          ? <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>FREE</span>
+                          : <span style={{ fontWeight: 600 }}>&#8377;{shippingInfo.shippingCost}</span>
+                        }
+                      </p>
+                      {!shippingInfo.isFreeShipping && shippingInfo.remainingForFreeShipping > 0 && (
+                        <p className="zone-info-line text-muted" style={{ fontSize: '0.75rem' }}>
+                          Add &#8377;{shippingInfo.remainingForFreeShipping} more for free shipping
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
