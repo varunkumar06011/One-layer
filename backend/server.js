@@ -1,42 +1,63 @@
 import 'dotenv/config'
-import express from 'express'
+
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import express from 'express'
+import helmet from 'helmet'
 import morgan from 'morgan'
 
-import productsRouter from './routes/products.js'
-import shippingRouter from './routes/shipping.js'
+import { config } from './config/env.js'
+import { errorHandler, notFoundHandler, requestId } from './middleware/errors.js'
+import { generalLimiter } from './middleware/rateLimit.js'
+import adminRouter from './routes/admin.js'
 import ordersRouter from './routes/orders.js'
+import productsRouter from './routes/products.js'
 import quotesRouter from './routes/quotes.js'
 import sampleKitRouter from './routes/sampleKit.js'
-import adminRouter, { requireAuth } from './routes/admin.js'
+import shippingRouter from './routes/shipping.js'
 
 const app = express()
-const PORT = process.env.PORT || 5000
 
-// CORS - allow configured origins (or all in production)
-const origins = (process.env.CORS_ORIGINS || '*')
-  .split(',')
-  .map((o) => o.trim())
+// Behind Render/Vercel/Cloudflare: trust exactly one proxy hop so req.ip is the
+// client address (rate limiting depends on it) without accepting spoofed chains.
+app.set('trust proxy', 1)
+app.disable('x-powered-by')
 
-app.use(cors({
-  origin: origins,
-  credentials: true,
-}))
+app.use(requestId)
 
-// Body parser
-app.use(express.json({ limit: '10mb' }))
+app.use(
+  helmet({
+    contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
+    crossOriginResourcePolicy: { policy: 'same-site' },
+    hsts: config.isProduction ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+  })
+)
 
-// Logging
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'))
-}
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Same-origin/server-to-server requests send no Origin header.
+      if (!origin) return callback(null, true)
+      callback(null, config.corsOrigins.includes(origin))
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 600,
+  })
+)
 
-// Health check
+// Uploads go to object storage via signed URLs, so JSON bodies stay small.
+app.use(express.json({ limit: '256kb' }))
+app.use(cookieParser())
+
+app.use(morgan(config.isProduction ? 'combined' : 'dev'))
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// API routes
+app.use('/api', generalLimiter)
 app.use('/api/products', productsRouter)
 app.use('/api/shipping', shippingRouter)
 app.use('/api/orders', ordersRouter)
@@ -44,37 +65,14 @@ app.use('/api/quotes', quotesRouter)
 app.use('/api/sample-kit', sampleKitRouter)
 app.use('/api/admin', adminRouter)
 
-// Root
 app.get('/', (req, res) => {
-  res.json({
-    name: 'ONE LAYER API',
-    version: '1.0.0',
-    endpoints: [
-      'GET  /api/products',
-      'GET  /api/products/:id',
-      'GET  /api/products/:id/price?size=&custom=',
-      'POST /api/shipping/calculate',
-      'POST /api/orders',
-      'GET  /api/orders',
-      'POST /api/quotes',
-      'POST /api/sample-kit',
-      'GET  /health',
-    ],
-  })
+  res.json({ name: 'ONE LAYER API', version: '1.0.0' })
 })
 
-// 404
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' })
-})
+app.use(notFoundHandler)
+app.use(errorHandler)
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).json({ error: 'Something went wrong' })
-})
-
-app.listen(PORT, () => {
-  console.log(`ONE LAYER API running on port ${PORT}`)
-  console.log(`CORS origins: ${origins.join(', ')}`)
+app.listen(config.port, () => {
+  console.log(`ONE LAYER API running on port ${config.port} (${config.env})`)
+  console.log(`CORS origins: ${config.corsOrigins.join(', ')}`)
 })

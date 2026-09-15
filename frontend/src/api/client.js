@@ -24,17 +24,42 @@ async function request(path, options = {}) {
   return res.json()
 }
 
-async function authedRequest(path, options = {}) {
-  const token = localStorage.getItem('one-layer-admin-token')
-  if (!token) throw new Error('Not authenticated')
-  const url = `${API_URL}${path}`
-  const res = await fetch(url, {
+// The admin access token is short-lived and kept in memory only. The long-lived
+// refresh token lives in an HttpOnly cookie the browser never exposes to JS.
+let adminAccessToken = null
+
+async function refreshAdminSession() {
+  const res = await fetch(`${API_URL}/api/admin/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    adminAccessToken = null
+    return null
+  }
+  const data = await res.json()
+  adminAccessToken = data.accessToken
+  return data
+}
+
+async function authedRequest(path, options = {}, retry = true) {
+  if (!adminAccessToken && retry) await refreshAdminSession()
+  if (!adminAccessToken) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_URL}${path}`, {
+    credentials: 'include',
+    ...options,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${adminAccessToken}`,
+      ...(options.headers || {}),
     },
-    ...options,
   })
+
+  if (res.status === 401 && retry) {
+    adminAccessToken = null
+    if (await refreshAdminSession()) return authedRequest(path, options, false)
+  }
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: 'Request failed' }))
@@ -91,28 +116,44 @@ export async function requestSampleKit(data) {
 
 // Admin — login
 export async function adminLogin(password) {
-  const result = await request('/api/admin/login', {
+  const res = await fetch(`${API_URL}/api/admin/login`, {
     method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),
   })
-  localStorage.setItem('one-layer-admin-token', result.token)
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: 'Request failed' }))
+    throw new Error(error.error || `HTTP ${res.status}`)
+  }
+  const result = await res.json()
+  adminAccessToken = result.accessToken
   return result
 }
 
-// Admin — verify session
+// Admin — restore a session from the refresh cookie (page reload)
 export async function adminVerify() {
   try {
+    if (!(await refreshAdminSession())) return null
     return await authedRequest('/api/admin/verify')
   } catch {
-    localStorage.removeItem('one-layer-admin-token')
     return null
   }
+}
+
+// Admin — logout, revoking the refresh-token family server-side
+export async function adminLogout() {
+  adminAccessToken = null
+  await fetch(`${API_URL}/api/admin/logout`, { method: 'POST', credentials: 'include' }).catch(
+    () => {}
+  )
 }
 
 // Admin — list orders (with optional filters)
 export async function getOrders(params = {}) {
   const query = new URLSearchParams(params).toString()
-  return authedRequest(`/api/orders${query ? `?${query}` : ''}`)
+  const result = await authedRequest(`/api/orders${query ? `?${query}` : ''}`)
+  return result.items
 }
 
 // Admin — get single order

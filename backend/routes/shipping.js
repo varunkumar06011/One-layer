@@ -1,57 +1,64 @@
-﻿import { Router } from 'express'
-import { getZoneFromPincodeAsync, getShippingCost, FREE_SHIPPING_THRESHOLD, lookupPincode, classifyZone } from '../data/products.js'
+import { Router } from 'express'
+import { z } from 'zod'
+
+import {
+  FREE_SHIPPING_THRESHOLD,
+  classifyZone,
+  getShippingCost,
+  lookupPincode,
+} from '../data/products.js'
+import { badRequest } from '../middleware/errors.js'
+import { validate } from '../middleware/validate.js'
+import { pincode } from '../schemas/common.js'
 
 const router = Router()
 
-// POST /api/shipping/calculate
-// Body: { pincode, itemCount, subtotal }
-// Uses India Post pincode API to determine zone, then looks up rate
-router.post('/calculate', async (req, res) => {
-  const { pincode, itemCount, subtotal } = req.body
-
-  if (!pincode || String(pincode).length !== 6) {
-    return res.status(400).json({ error: 'A valid 6-digit pincode is required' })
-  }
-  if (!itemCount || itemCount < 1) {
-    return res.status(400).json({ error: 'itemCount must be at least 1' })
-  }
-
-  const location = await lookupPincode(pincode)
-  if (!location) {
-    return res.status(400).json({ error: 'Could not look up pincode. Please check and try again.' })
-  }
-
-  const zone = classifyZone(location)
-  if (!zone) {
-    return res.status(400).json({ error: 'Could not determine delivery zone for this pincode' })
-  }
-
-  const sub = Number(subtotal) || 0
-  const isFreeShipping = sub >= FREE_SHIPPING_THRESHOLD
-  const baseCost = getShippingCost(itemCount, zone)
-  const shippingCost = isFreeShipping ? 0 : baseCost
-
-  const zoneLabels = {
-    local: 'Local delivery',
-    state: 'Within state',
-    metro: 'Metro / zone',
-    rest: 'Rest of India',
-  }
-
-  res.json({
+// subtotal is a client hint used only to preview the free-shipping threshold;
+// the authoritative subtotal is recomputed when the order is created.
+const calculateSchema = z
+  .object({
     pincode,
-    zone,
-    zoneLabel: zoneLabels[zone],
-    location: {
-      district: location.district,
-      state: location.state,
-    },
-    itemCount,
-    shippingCost,
-    isFreeShipping,
-    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
-    remainingForFreeShipping: isFreeShipping ? 0 : FREE_SHIPPING_THRESHOLD - sub,
+    itemCount: z.coerce.number().int().min(1).max(500),
+    subtotal: z.coerce.number().min(0).max(10_000_000).default(0),
   })
+  .strip()
+
+const ZONE_LABELS = {
+  local: 'Local delivery',
+  state: 'Within state',
+  metro: 'Metro / zone',
+  rest: 'Rest of India',
+}
+
+// POST /api/shipping/calculate
+router.post('/calculate', validate({ body: calculateSchema }), async (req, res, next) => {
+  try {
+    const { pincode: code, itemCount, subtotal } = req.body
+
+    const location = await lookupPincode(code)
+    if (!location) {
+      return next(badRequest('Could not look up pincode. Please check and try again.'))
+    }
+    const zone = classifyZone(location)
+    if (!zone) return next(badRequest('Could not determine delivery zone for this pincode'))
+
+    const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
+    const shippingCost = isFreeShipping ? 0 : getShippingCost(itemCount, zone)
+
+    res.json({
+      pincode: code,
+      zone,
+      zoneLabel: ZONE_LABELS[zone],
+      location: { district: location.district, state: location.state },
+      itemCount,
+      shippingCost,
+      isFreeShipping,
+      freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+      remainingForFreeShipping: isFreeShipping ? 0 : FREE_SHIPPING_THRESHOLD - subtotal,
+    })
+  } catch (err) {
+    next(err)
+  }
 })
 
 export default router

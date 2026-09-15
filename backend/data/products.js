@@ -98,10 +98,13 @@ export function getPrice(product, size, isCustom = false) {
 
 // Look up pincode via India Post public API
 // Returns { district, state, city } or null on failure
+export const PINCODE_PATTERN = /^[1-9][0-9]{5}$/
+
 export async function lookupPincode(pincode) {
-  if (!pincode || pincode.length !== 6) return null
+  if (!PINCODE_PATTERN.test(String(pincode ?? ''))) return null
   try {
-    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+    const url = new URL(`https://api.postalpincode.in/pincode/${pincode}`)
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000), redirect: 'error' })
     const data = await res.json()
     if (!data || !Array.isArray(data) || data.length === 0) return null
     const postOffices = data[0]?.PostOffice

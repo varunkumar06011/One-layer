@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react'
-import { adminLogin, adminVerify, getOrders, getOrderById, updateOrderStatus } from '../api/client.js'
+import { adminLogin, adminLogout, adminVerify, getOrders, getOrderById, updateOrderStatus } from '../api/client.js'
 
+// Values must match the server-side ORDER_STATUSES enum.
 const STATUSES = [
-  'New — sent via WhatsApp',
-  'Confirmed',
-  'Shipped',
-  'Delivered',
-  'Cancelled',
+  { value: 'NEW', label: 'New' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'IN_PRODUCTION', label: 'In production' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
 ]
+
+const statusLabel = (value) => STATUSES.find((s) => s.value === value)?.label ?? value
+const statusClass = (value) => `admin-status admin-status-${String(value).toLowerCase()}`
 
 export default function Admin() {
   const [authed, setAuthed] = useState(false)
@@ -45,8 +50,8 @@ export default function Admin() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('one-layer-admin-token')
+  const handleLogout = async () => {
+    await adminLogout()
     setAuthed(false)
     setOrders([])
     setSelectedOrder(null)
@@ -157,7 +162,7 @@ export default function Admin() {
             />
             <select value={filter} onChange={(e) => setFilter(e.target.value)} className="admin-status-filter">
               <option value="">All statuses</option>
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
             <button className="btn btn-outline btn-sm admin-refresh-btn" onClick={fetchOrders}>Refresh</button>
           </div>
@@ -192,9 +197,7 @@ export default function Admin() {
                     <span>{order.itemCount} items</span>
                     <span>&#8377;{order.total}</span>
                     <span>
-                      <span className={`admin-status admin-status-${order.status.split(' ')[0].toLowerCase()}`}>
-                        {order.status}
-                      </span>
+                      <span className={statusClass(order.status)}>{statusLabel(order.status)}</span>
                     </span>
                     <span className="text-muted admin-date">
                       {new Date(order.createdAt).toLocaleDateString('en-IN', {
@@ -219,9 +222,7 @@ export default function Admin() {
                           {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </span>
                       </div>
-                      <span className={`admin-status admin-status-${order.status.split(' ')[0].toLowerCase()}`}>
-                        {order.status}
-                      </span>
+                      <span className={statusClass(order.status)}>{statusLabel(order.status)}</span>
                     </div>
                     <div className="admin-card-customer">
                       <span className="admin-customer-name">{order.customer?.name}</span>
@@ -298,11 +299,7 @@ export default function Admin() {
                         {item.placement && ` · ${item.placement}`}
                       </span>
                       {item.customDesign && (
-                        <div className="admin-design-link">
-                          <a href={item.customDesign.url} target="_blank" rel="noopener noreferrer">
-                            View design: {item.customDesign.name}
-                          </a>
-                        </div>
+                        <div className="admin-design-link">Design file: {item.customDesign.name}</div>
                       )}
                     </div>
                     <span>&#8377;{item.lineTotal}</span>
@@ -328,12 +325,12 @@ export default function Admin() {
                 <div className="admin-status-buttons">
                   {STATUSES.map((s) => (
                     <button
-                      key={s}
-                      className={`admin-status-btn ${selectedOrder.status === s ? 'active' : ''}`}
-                      onClick={() => handleStatusUpdate(selectedOrder.id, s)}
-                      disabled={updatingStatus || selectedOrder.status === s}
+                      key={s.value}
+                      className={`admin-status-btn ${selectedOrder.status === s.value ? 'active' : ''}`}
+                      onClick={() => handleStatusUpdate(selectedOrder.id, s.value)}
+                      disabled={updatingStatus || selectedOrder.status === s.value}
                     >
-                      {s}
+                      {s.label}
                     </button>
                   ))}
                 </div>
