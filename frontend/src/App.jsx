@@ -1,4 +1,5 @@
 ﻿import { Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
@@ -11,10 +12,12 @@ import Companies from './pages/Companies.jsx'
 import About from './pages/About.jsx'
 import Cart from './pages/Cart.jsx'
 import Admin from './pages/Admin.jsx'
+import Login from './pages/Login.jsx'
+import Account from './pages/Account.jsx'
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <ConsentModal />
       <ScrollToTop />
       <Navbar />
@@ -28,9 +31,11 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </main>
       <Footer />
-    </>
+    </AuthProvider>
   )
 }

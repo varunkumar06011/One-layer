@@ -76,6 +76,18 @@ export default function Product() {
     setTimeout(() => setAdded(false), 2500)
   }
 
+  const handleBuyNow = () => {
+    addItem({
+      product,
+      size,
+      color: activeColor,
+      quantity,
+      customDesign: customMode ? designFile : null,
+      placement: customMode ? placement : null,
+    })
+    navigate('/cart')
+  }
+
   return (
     <div className="product-page">
       <div className="product-layout">
@@ -234,6 +246,9 @@ export default function Product() {
           <div className="product-actions">
             <button className="btn btn-primary btn-full" onClick={handleAdd}>
               {added ? 'Added to cart' : `Add to cart — \u20B9${price * quantity}`}
+            </button>
+            <button className="btn btn-outline btn-full" onClick={handleBuyNow}>
+              Buy Now — &#8377;{price * quantity}
             </button>
             <Link to="/shop" className="btn btn-ghost">Continue shopping</Link>
           </div>

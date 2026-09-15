@@ -19,6 +19,7 @@ export default function Cart() {
   const [placing, setPlacing] = useState(false)
   const [orderError, setOrderError] = useState(null)
   const [whatsappUsed, setWhatsappUsed] = useState(null)
+  const [orderedItems, setOrderedItems] = useState([])
 
   const itemCount = items.reduce((s, i) => s + i.quantity, 0)
 
@@ -116,11 +117,13 @@ export default function Cart() {
       setSavedOrder(order)
       setOrderSaved(true)
       setWhatsappUsed(whatsappNumber)
+      // Save items for the confirmation screen before clearing
+      setOrderedItems(items.map((i) => ({ ...i })))
       // Open WhatsApp with pre-filled message
       const message = buildOrderMessage()
       const link = buildWhatsAppLink(whatsappNumber, message)
       window.open(link, '_blank')
-      // Clear cart after successful order
+      // Clear cart after saving items for confirmation
       clearCart()
     } catch (err) {
       setOrderError(err.message)
@@ -131,8 +134,8 @@ export default function Cart() {
 
   if (orderSaved) {
     return (
-      <div className="container section text-center">
-        <div className="order-confirmed fade-in">
+      <div className="container section">
+        <div className="order-confirmed fade-in text-center">
           <h1>Order placed.</h1>
           <p className="text-muted">
             Thank you, {customer.name}. Your order has been saved and sent via WhatsApp.
@@ -143,6 +146,45 @@ export default function Cart() {
               Order ID: {savedOrder.id}
             </p>
           )}
+        </div>
+
+        {/* Ordered items summary */}
+        {orderedItems.length > 0 && (
+          <div className="ordered-items-summary" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+            <h3 style={{ marginBottom: '1rem' }}>Your order</h3>
+            {orderedItems.map((item) => {
+              const basePrice = item.customDesign
+                ? CUSTOM_PRICING[item.size]
+                : item.product.pricing[item.size]
+              const lineTotal = basePrice * item.quantity + (item.customDesign ? CUSTOM_SURCHARGE * item.quantity : 0)
+              const img = getProductImage(item.product.id, item.color?.name)
+              return (
+                <div key={item.key} className="cart-item" style={{ marginBottom: '1rem' }}>
+                  <div className="cart-item-visual" style={{ background: item.color.hex, width: '64px', height: '64px' }}>
+                    {img ? (
+                      <img src={img} alt={item.product.name} className="cart-item-img" />
+                    ) : (
+                      <div className="tee-body-sm" />
+                    )}
+                  </div>
+                  <div className="cart-item-info">
+                    <h3>{item.product.name}{item.customDesign && ' (Custom)'}</h3>
+                    <p className="text-muted">
+                      {item.color.name} · Size {item.size} · Qty {item.quantity}
+                    </p>
+                  </div>
+                  <div className="cart-item-total">&#8377;{lineTotal}</div>
+                </div>
+              )
+            })}
+            <div className="summary-total" style={{ marginTop: '1rem' }}>
+              <span>Total</span>
+              <span>&#8377;{total}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="text-center" style={{ marginTop: '2rem' }}>
           <Link to="/shop" className="btn btn-primary">Continue shopping</Link>
         </div>
       </div>
